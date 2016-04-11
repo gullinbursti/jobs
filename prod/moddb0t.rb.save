@@ -1,0 +1,100 @@
+#-- includes
+require 'eat'
+require 'cinch'
+
+
+#-- convert to array of channels
+channel_names = Array.new
+lines = eat("http://beta.modd.live/api/stream_bot.php", :timeout =>40).split("\n")
+
+puts "yo"
+
+if lines.length > 0
+  lines.each do |line|
+    channel_names.insert(-1, "#" + line)
+  end
+
+  #-- config bot
+  bot = Cinch::Bot.new do
+    configure do |c|
+      c.server          = "irc.twitch.tv"
+      c.port            = 6667
+      c.nick            = "moddboto"
+      c.realname        = "moddboto"
+      c.user            = "moddboto"
+      c.password        = "oauth:zfcxrlmcbtok82iismmtpplevxkxx9"
+      c.channels        = channel_names
+      c.verbose         = false
+    end
+  
+    #-- recieved "!boost"
+    on :message, /^\!boost$/i do |m|
+      m.reply ("boost")
+    end
+  
+    #-- recieved "!game"
+    on :message, /^\!game$/i do |m|
+      channel = m.channel.name[1..-1]
+      adurl = eat("http://beta.modd.live/api/bot_url.php?type=game&name=" + channel)
+      #-- m.reply "Hello, #{m.user.nick} here's the URL " + adurl
+      m.reply adurl
+    end
+    
+    #-- recieved "!help"
+    on :message, /^\!help$/i do |m|
+      m.reply ("The following commands are available from MODD. - modd.live\ngame\npromo\nmodd\nnotify\ngiveaway\nboost\nstats\nrehost\nhelp")
+    end
+    
+    #-- recieved "!maxchatter"
+    on :message, /^\!maxchatter$/i do |m|
+      m.reply ("maxchatter")
+    end
+    
+    #-- recieved "!maxviewers"
+    on :message, /^\!maxviewers$/i do |m|
+      m.reply ("maxviewers")
+    end
+
+    #-- recieved "!modd"
+    on :message, /^\!modd$/i do |m|
+      m.reply ("MODD has been activated! type !help for details. - modd.live")
+    end
+  
+    #-- recieved "!notify"
+    on :message, /^\!notify$/i do |m|
+      channel = m.channel.name[1..-1]
+      m.reply ("To be notified each time this streamer goes live click here s.00m.co/" + channel)
+    end
+
+    #-- recieved "!promo"
+    on :message, /^\!promo$/i do |m|
+      channel = m.channel.name[1..-1]
+      adurl = eat("http://beta.modd.live/api/bot_url.php?type=promo&name=" + channel)
+      m.reply (adurl)  
+    end
+    
+    #-- recieved "!rehost"
+    on :message, /^\!rehost$/i do |m|
+      m.reply ("rehost")
+    end
+
+    #-- recieved "!stats"
+    on :message, /^\!stats$/i do |m|
+      msg = eat("http://beta.modd.live/api/bot_stats.php?name=" + m.channel.name[1..-1], :timeout =>40)
+      m.reply msg
+    end
+    
+    #-- recieved "!takeoveroff"
+    on :message, /^\!takeoveroff$/i do |m|
+      m.reply ("takeoveroff")
+    end
+    
+    #-- recieved "!takeoveron"
+    on :message, /^\!takeoveron$/i do |m|
+      m.reply ("takeoveron")
+    end
+  end
+
+  #-- startup the bot
+  bot.start
+end
